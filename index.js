@@ -9,6 +9,30 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors());
 
+const {MongoClient, ObjectId, ServerApiVersion} = require("mongodb");
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dk8ve.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
+const client = new MongoClient(uri);
+
+const run = async () =>{
+    try{
+        await client.connect();
+        console.log("MongoDB connected Successfully");
+
+
+
+
+
+
+
+        
+    } catch (error){
+        console.log("Mongodb Connection Failed: ",error);
+    }
+}
+run();
+
 app.get("/", (req, res) =>{
     res.send("The Auth Server Running...");
 })
