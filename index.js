@@ -20,18 +20,23 @@ const run = async () =>{
         await client.connect();
         console.log("MongoDB connected Successfully");
 
+        const database = client.db("testDB");
+        const userCollection = database.collection("users");
 
 
 
 
 
 
-        
+
+
     } catch (error){
         console.log("Mongodb Connection Failed: ",error);
     }
 }
 run();
+
+
 
 app.get("/", (req, res) =>{
     res.send("The Auth Server Running...");
