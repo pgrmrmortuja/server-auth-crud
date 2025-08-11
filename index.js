@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const bcrypt = require("bcrypt");
 const app = express();
 
 const port = process.env.PORT || 5000;
@@ -22,6 +23,12 @@ const run = async () =>{
 
         const database = client.db("testDB");
         const userCollection = database.collection("users");
+
+        app.post("/register", async (req, res) =>{
+            const data = req.body;
+            const result = await userCollection.insertOne(data);
+            res.send(result);
+        })
 
 
 
