@@ -24,10 +24,56 @@ const run = async () =>{
         const database = client.db("testDB");
         const userCollection = database.collection("users");
 
+        //Registration
         app.post("/register", async (req, res) =>{
             const data = req.body;
-            const result = await userCollection.insertOne(data);
-            res.send(result);
+            console.log("data from client: ",data);
+            const {name, email, password} = data;
+            
+            
+            const existing = await userCollection.findOne({email});
+            if(existing){
+                return res.json({message: "Email already exists"});
+            }
+
+            const hashed = await bcrypt.hash(password, 10);
+
+
+            const result = await userCollection.insertOne({
+                name: name,
+                email: email,
+                password: hashed
+            });
+
+            console.log("result send to mongodb",result);
+
+            res.json({result, name, email});
+           
+        })
+
+        //Login
+        app.post("/login", async (req, res) =>{
+            const data = req.body;
+            const{email, password} = data;
+            
+            const user = await userCollection.findOne({email});
+
+            if(!user){
+                return res.json({message: "User not found"});
+            }
+
+            const ok = await bcrypt.compare(password, user.password);
+
+            if(!ok){
+                return res.json({message: "Wrong Password"});
+            }
+
+            const safeUser = {
+                name: user.name,
+                email: user.email
+            }
+
+            res.json({message: "Login Success", safeUser});
         })
 
 
