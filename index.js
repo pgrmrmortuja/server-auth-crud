@@ -24,6 +24,12 @@ const run = async () =>{
         const database = client.db("testDB");
         const userCollection = database.collection("users");
 
+        //Get All User
+        app.get("/users", async (req , res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
         //Registration
         app.post("/register", async (req, res) =>{
             const data = req.body;
