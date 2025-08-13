@@ -65,13 +65,13 @@ const run = async () =>{
             const user = await userCollection.findOne({email});
 
             if(!user){
-                return res.json({message: "User not found"});
+                return res.json({message: "User not found, Please Register First"});
             }
 
             const ok = await bcrypt.compare(password, user.password);
 
             if(!ok){
-                return res.json({message: "Wrong Password"});
+                return res.json({message: "Wrong Password. Please Try Again"});
             }
 
             const safeUser = {
@@ -82,7 +82,28 @@ const run = async () =>{
             res.json({message: "Login Success", safeUser});
         })
 
+        //Reset Password
+        app.patch("/reset-password", async (req , res) =>{
+            const {email, newPassword} = req.body;
+            const user = await userCollection.findOne({email});
 
+            if(!user){
+                return res.json({message: "User not found"});
+            }
+
+            const filter = {email: user.email}
+
+            const hashed = await bcrypt.hash(newPassword , 10);
+            const update = {
+                $set:{
+                    password: hashed
+                }
+            }
+
+            const result = await userCollection.updateOne(filter, update);
+
+            res.json({message: "Password Reset Successfull", result});
+        })
 
 
 
