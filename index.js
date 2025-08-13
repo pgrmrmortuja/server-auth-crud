@@ -10,14 +10,14 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors());
 
-const {MongoClient, ObjectId, ServerApiVersion} = require("mongodb");
+const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dk8ve.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri);
 
-const run = async () =>{
-    try{
+const run = async () => {
+    try {
         await client.connect();
         console.log("MongoDB connected Successfully");
 
@@ -25,17 +25,17 @@ const run = async () =>{
         const userCollection = database.collection("users");
 
         //Get All User
-        app.get("/users", async (req , res) => {
+        app.get("/users", async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
 
         //Find An Account
-        app.get("/find-account", async (req , res) =>{
+        app.get("/find-account", async (req, res) => {
             const email = req.query.email;
-            const user = await userCollection.findOne({email});
-            if(!user){
-                return res.json({message: "User not found"})
+            const user = await userCollection.findOne({ email });
+            if (!user) {
+                return res.json({ message: "User not found" })
             }
             res.json({
                 name: user.name,
@@ -44,15 +44,15 @@ const run = async () =>{
         })
 
         //Registration
-        app.post("/register", async (req, res) =>{
+        app.post("/register", async (req, res) => {
             const data = req.body;
-            console.log("data from client: ",data);
-            const {name, email, password} = data;
-            
-            
-            const existing = await userCollection.findOne({email});
-            if(existing){
-                return res.json({message: "Email already exists"});
+            console.log("data from client: ", data);
+            const { name, email, password } = data;
+
+
+            const existing = await userCollection.findOne({ email });
+            if (existing) {
+                return res.json({ message: "Email already exists" });
             }
 
             const hashed = await bcrypt.hash(password, 10);
@@ -64,27 +64,27 @@ const run = async () =>{
                 password: hashed
             });
 
-            console.log("result send to mongodb",result);
+            console.log("result send to mongodb", result);
 
-            res.json({result, name, email});
-           
+            res.json({ result, name, email });
+
         })
 
         //Login
-        app.post("/login", async (req, res) =>{
+        app.post("/login", async (req, res) => {
             const data = req.body;
-            const{email, password} = data;
-            
-            const user = await userCollection.findOne({email});
+            const { email, password } = data;
 
-            if(!user){
-                return res.json({message: "User not found, Please Register First"});
+            const user = await userCollection.findOne({ email });
+
+            if (!user) {
+                return res.json({ message: "User not found, Please Register First" });
             }
 
             const ok = await bcrypt.compare(password, user.password);
 
-            if(!ok){
-                return res.json({message: "Wrong Password. Please Try Again"});
+            if (!ok) {
+                return res.json({ message: "Wrong Password. Please Try Again" });
             }
 
             const safeUser = {
@@ -92,30 +92,35 @@ const run = async () =>{
                 email: user.email
             }
 
-            res.json({message: "Login Success", safeUser});
+            res.json({ message: "Login Success", safeUser });
         })
 
         //Reset Password
-        app.patch("/reset-password", async (req , res) =>{
-            const {email, newPassword} = req.body;
-            const user = await userCollection.findOne({email});
+        app.patch("/reset-password", async (req, res) => {
+            const { email, newPassword } = req.body;
+            const user = await userCollection.findOne({ email });
 
-            if(!user){
-                return res.json({message: "User not found"});
+            if (!user) {
+                return res.json({ message: "User not found" });
             }
 
-            const filter = {email: user.email}
+            const filter = { email: user.email }
 
-            const hashed = await bcrypt.hash(newPassword , 10);
+            const isSame = await bcrypt.compare(newPassword, user.password);
+            if (isSame) {
+                return res.json({ message: "Same Password. Please Try a New Password" });
+            }
+
+            const hashed = await bcrypt.hash(newPassword, 10);
             const update = {
-                $set:{
+                $set: {
                     password: hashed
                 }
             }
 
             const result = await userCollection.updateOne(filter, update);
 
-            res.json({message: "Password Reset Successfull", result});
+            res.json({ message: "Password Reset Successfull", result });
         })
 
 
@@ -123,18 +128,18 @@ const run = async () =>{
 
 
 
-    } catch (error){
-        console.log("Mongodb Connection Failed: ",error);
+    } catch (error) {
+        console.log("Mongodb Connection Failed: ", error);
     }
 }
 run();
 
 
 
-app.get("/", (req, res) =>{
+app.get("/", (req, res) => {
     res.send("The Auth Server Running...");
 })
 
-app.listen(port, () =>{
+app.listen(port, () => {
     console.log(`The server is running ${port} port`);
 })
