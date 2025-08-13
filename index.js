@@ -30,6 +30,19 @@ const run = async () =>{
             res.send(result);
         })
 
+        //Find An Account
+        app.get("/find-account", async (req , res) =>{
+            const email = req.query.email;
+            const user = await userCollection.findOne({email});
+            if(!user){
+                return res.json({message: "User not found"})
+            }
+            res.json({
+                name: user.name,
+                email: user.email
+            })
+        })
+
         //Registration
         app.post("/register", async (req, res) =>{
             const data = req.body;
